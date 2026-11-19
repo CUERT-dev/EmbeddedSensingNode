@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y clang-format
+      - run: clang-format --dry-run --Werror $(git ls-files 'app/*.[ch]' 'bsp/*.[ch]' 'drivers/*.[ch]' 'middleware/*.[ch]' 'platform/*.[ch]' 'tests/*.[ch]')
+
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi cmake ninja-build
+      - run: cmake --preset release
+      - run: cmake --build --preset release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sensing-firmware
+          path: |
+            build/sensing.elf
+            build/sensing.bin
+            build/sensing.map
