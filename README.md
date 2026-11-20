@@ -33,7 +33,7 @@ Windows and macOS users can install the same four tools: Arm GNU Toolchain 12 or
 ```bash
 git clone https://github.com/CUERT-dev/EmbeddedSensingNode.git
 cd EmbeddedSensingNode
-git checkout develop
+git checkout Developing
 cmake --preset release
 cmake --build --preset release
 ```
@@ -46,22 +46,45 @@ The build produces `build/sensing.elf`, `build/sensing.bin`, and `build/sensing.
 
 Success looks like the green LD2 LED blinking twice per second.
 
+## Branches
+
+| Branch | Content | Receives PRs from |
+|---|---|---|
+| `main` | README only, never receives code | none |
+| `Developing` | Active development, blink firmware lives here | `feature/<issue-id>-<name>` and `fix/<issue-id>-<name>` |
+| `Testing` | Code under hardware and integration testing | `Developing` only |
+| `Validating` | Verified code ready for hand-over to the team | `Testing` only |
+
+Code moves in one direction: feature branch, then `Developing`, then `Testing`, then `Validating`. The `flow` CI check rejects any pull request that skips a stage.
+
+## Roles
+
+| Role | GitHub permission | Can do |
+|---|---|---|
+| Developer | Write | Open PRs into `Developing`, review teammates |
+| Tester | Write | Approve PRs into `Testing`, report results in Linear |
+| Lead (code owner) | Maintain | Approve PRs into `Validating`, manage settings |
+| Admin | Admin | Repository settings and access |
+
+Nobody pushes directly to `main`, `Developing`, `Testing`, or `Validating`. Every change goes through a pull request with a green CI run and the approvals above.
+
 ## Development workflow
 
 1. Take an issue in Linear and move it from Todo to In Progress.
-2. Branch from `develop` using `feature/<issue-id>-<short-name>`, for example `feature/EMB-30-as5600-driver`.
+2. Branch from `Developing` using `feature/<issue-id>-<short-name>`, for example `feature/EMB-30-as5600-driver`.
 3. Commit with Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`).
 4. Run `clang-format -i` on changed files and build locally before pushing.
-5. Open a pull request into `develop`. CI must be green and one reviewer must approve.
-6. Merges are squash-only. `main` is updated from `develop` by pull request at each milestone.
-7. Move the Linear issue to Done after the merge.
+5. Open a pull request into `Developing`. CI must be green and one reviewer must approve.
+6. When a feature set is ready for hardware testing, open a pull request from `Developing` into `Testing`, then from `Testing` into `Validating` after it passes. Use merge commits for these promotions so the branches stay in step.
+7. Move the Linear issue to Done after the merge into `Developing`, or after `Validating` if the issue requires validation.
 
-Repository rules, applied by `scripts/setup-repo.sh`: `main` and `develop` are protected, direct pushes and force pushes are blocked, pull requests need one approval, the `format` and `build` checks must pass, conversations must be resolved, and history stays linear.
+Repository rules are applied by `scripts/setup-repo.sh`: all four branches are protected, direct and force pushes are blocked, pull requests need approval, the `format`, `build`, and `flow` checks must pass on the three code branches, and conversations must be resolved.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every push and pull request to `main` and `develop`:
+`.github/workflows/ci.yml` runs on pushes and pull requests to `Developing`, `Testing`, and `Validating`:
 
+- `flow`: rejects pull requests that break the branch order.
 - `format`: clang-format check on all C sources.
 - `build`: CMake and Ninja build with `arm-none-eabi-gcc`, warnings as errors, then uploads the ELF, BIN, and map as the `sensing-firmware` artifact.
 

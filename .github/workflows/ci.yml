@@ -2,15 +2,29 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [Developing, Testing, Validating]
   pull_request:
-    branches: [main, develop]
+    branches: [Developing, Testing, Validating]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  flow:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          base="${{ github.base_ref }}"
+          head="${{ github.head_ref }}"
+          case "$base" in
+            Developing) [[ "$head" == feature/* || "$head" == fix/* || "$head" == docs/* || "$head" == chore/* ]] ;;
+            Testing) [[ "$head" == "Developing" ]] ;;
+            Validating) [[ "$head" == "Testing" ]] ;;
+            *) false ;;
+          esac || { echo "PR from $head into $base breaks the branch flow"; exit 1; }
+
   format:
     runs-on: ubuntu-24.04
     steps:
