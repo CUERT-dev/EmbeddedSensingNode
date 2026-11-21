@@ -26,6 +26,8 @@ jobs:
               requestedReviewers = ['ali44455', '2-Farah-1'];
             } else if (base === 'Validating') {
               requestedReviewers = ['Eyad-Attwa231', 'abdelwadoud299'];
+            } else if (base === 'main') {
+              requestedReviewers = ['basel-sh', 'Salah-waheed'];
             }
 
             // Exclude the PR author from the review request list
