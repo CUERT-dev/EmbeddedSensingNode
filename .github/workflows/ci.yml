@@ -37,7 +37,8 @@ jobs:
             Developing) [[ "$head" == Feature/* || "$head" == Fix/* || "$head" == Docs/* || "$head" == Chore/* || "$head" == feature/* || "$head" == fix/* || "$head" == docs/* || "$head" == chore/* || "$head" == "GeneratingTheProject" ]] ;;
             Maintaining) [[ "$head" == "Developing" ]] ;;
             Validating) [[ "$head" == "Maintaining" ]] ;;
-            *) echo "PR targeting $base is forbidden! PRs to main are strictly prohibited."; exit 1 ;;
+            main) [[ "$head" == "Validating" ]] ;;
+            *) false ;;
           esac || { echo "PR from $head into $base breaks the branch flow"; exit 1; }
 
   format:
