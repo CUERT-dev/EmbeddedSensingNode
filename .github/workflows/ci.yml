@@ -30,7 +30,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y clang-format
-      - run: clang-format --dry-run --Werror $(git ls-files 'app/*.[ch]' 'bsp/*.[ch]' 'drivers/*.[ch]' 'middleware/*.[ch]' 'platform/*.[ch]' 'tests/*.[ch]')
+      - name: Check project formatting
+        run: |
+          git ls-files -z -- \
+            'app/*.[ch]' 'bsp/*.[ch]' 'drivers/*.[ch]' \
+            'middleware/*.[ch]' 'platform/*.[ch]' 'tests/*.[ch]' \
+            ':!drivers/CMSIS/**' ':!drivers/STM32G4xx_HAL_Driver/**' ':!drivers/BSP/**' |
+            xargs -0 -r clang-format --dry-run --Werror
 
   build:
     runs-on: ubuntu-24.04
