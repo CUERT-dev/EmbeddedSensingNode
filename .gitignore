@@ -1,6 +1,0 @@
-build/
-*.elf
-*.bin
-*.map
-.vscode/
-.idea/
