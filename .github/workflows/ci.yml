@@ -12,10 +12,24 @@ concurrency:
 
 jobs:
   flow:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     steps:
-      - env:
+      - name: Check push branch
+        if: github.event_name == 'push'
+        run: |
+          case "$GITHUB_REF" in
+            refs/heads/Developing|refs/heads/Testing|refs/heads/Validating)
+              echo "Push to $GITHUB_REF_NAME follows the branch flow"
+              ;;
+            *)
+              echo "Push to $GITHUB_REF breaks the branch flow"
+              exit 1
+              ;;
+          esac
+
+      - name: Check pull request branch flow
+        if: github.event_name == 'pull_request'
+        env:
           base: ${{ github.base_ref }}
           head: ${{ github.head_ref }}
         run: |
