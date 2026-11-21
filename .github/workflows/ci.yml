@@ -4,7 +4,7 @@ on:
   push:
     branches: [Developing, Maintaining, Validating]
   pull_request:
-    branches: [Developing, Maintaining, Validating]
+    branches: [Developing, Maintaining, Validating, main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -37,7 +37,7 @@ jobs:
             Developing) [[ "$head" == Feature/* || "$head" == Fix/* || "$head" == Docs/* || "$head" == Chore/* || "$head" == feature/* || "$head" == fix/* || "$head" == docs/* || "$head" == chore/* || "$head" == "GeneratingTheProject" ]] ;;
             Maintaining) [[ "$head" == "Developing" ]] ;;
             Validating) [[ "$head" == "Maintaining" ]] ;;
-            *) false ;;
+            *) echo "PR targeting $base is forbidden! PRs to main are strictly prohibited."; exit 1 ;;
           esac || { echo "PR from $head into $base breaks the branch flow"; exit 1; }
 
   format:
