@@ -10,7 +10,6 @@ set(MCU_FLAGS -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
 file(GLOB_RECURSE SOURCES
     app/*.c
     bsp/*.c
-    drivers/*.c
     middleware/*.c
     platform/*.c
 )
