@@ -1,0 +1,28 @@
+name: Guard Main Branch
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize]
+
+jobs:
+  block-merge-to-main:
+    name: Prohibit PR Merges to Main
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Reject and Close PR
+        run: |
+          echo "Pull requests targeting 'main' are strictly forbidden by CUERT architecture policy."
+          gh pr close "${{ github.event.pull_request.number }}" \
+            --comment "❌ **CUERT Policy Enforcement:** Pull requests targeting \`main\` are strictly prohibited. No merges into \`main\` are permitted. Code is promoted via \`Developing\` -> \`Maintaining\` -> \`Validating\`." \
+            --repo "${{ github.repository }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fail Status Check
+        run: |
+          echo "Failing status check to guarantee merge lockout."
+          exit 1
