@@ -19,7 +19,7 @@ jobs:
           base="${{ github.base_ref }}"
           head="${{ github.head_ref }}"
           case "$base" in
-            Developing) [[ "$head" == feature/* || "$head" == fix/* || "$head" == docs/* || "$head" == chore/* ]] ;;
+            Developing) [[ "$head" == feature/* || "$head" == fix/* || "$head" == docs/* || "$head" == chore/* || "$head" == "GeneratingTheProject" ]] ;;
             Testing) [[ "$head" == "Developing" ]] ;;
             Validating) [[ "$head" == "Testing" ]] ;;
             *) false ;;
