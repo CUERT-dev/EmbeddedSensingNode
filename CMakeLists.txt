@@ -7,30 +7,30 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(MCU_FLAGS -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
 
-file(GLOB_RECURSE SOURCES
-    app/*.c
-    bsp/*.c
-    middleware/*.c
-    platform/*.c
+add_executable(${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
+
+add_subdirectory(cmake/stm32cubemx)
+target_link_libraries(${PROJECT_NAME} stm32cubemx)
+
+target_compile_options(STM32_Drivers PRIVATE
+    ${MCU_FLAGS} -Os -g3 -ffunction-sections -fdata-sections
 )
-
-add_executable(${PROJECT_NAME}.elf ${SOURCES})
-
-target_include_directories(${PROJECT_NAME}.elf PRIVATE app bsp drivers middleware platform)
-target_compile_definitions(${PROJECT_NAME}.elf PRIVATE STM32G431xx)
-target_compile_options(${PROJECT_NAME}.elf PRIVATE
+target_compile_options(${PROJECT_NAME} PRIVATE
     ${MCU_FLAGS} -Wall -Wextra -Werror -Os -g3
-    -ffreestanding -fno-tree-loop-distribute-patterns
     -ffunction-sections -fdata-sections
 )
-target_link_options(${PROJECT_NAME}.elf PRIVATE
+target_link_options(${PROJECT_NAME} PRIVATE
     ${MCU_FLAGS}
-    -T${CMAKE_SOURCE_DIR}/platform/STM32G431RBTx_FLASH.ld
+    -T${CMAKE_CURRENT_SOURCE_DIR}/STM32G431xx_FLASH.ld
+    --specs=nano.specs
     -Wl,--gc-sections -Wl,-Map=${PROJECT_NAME}.map
-    -nostdlib -lgcc
+)
+set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY
+    LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/STM32G431xx_FLASH.ld
 )
 
-add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.bin
-    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${PROJECT_NAME}.elf>
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.bin
+    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${PROJECT_NAME}>
 )
