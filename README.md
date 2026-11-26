@@ -2,7 +2,7 @@
 
 Firmware for the Sensing node of the CUERT car: an STM32G431 that reads the car sensors and publishes them on CAN to the Jetson and the Actuating node. Its sibling repository is the Actuating repo, which shares the same layout, tooling, and workflow.
 
-Target board: NUCLEO-G431RB (STM32G431RBT6). Current state: blinks the on-board LED (LD2, PA5) every 500 ms.
+Target board: NUCLEO-G431RB (STM32G431RBT6). Current state: blinks the on-board LED (LD2, PA5).
 
 ## Sensors owned by this node
 
@@ -44,17 +44,16 @@ The build produces `build/sensing.elf`, `build/sensing.bin`, and `build/sensing.
 ./scripts/flash.sh
 ```
 
-The green LD2 LED changes state every 500 ms, completing one on/off cycle per second.
-
 ## Branches
 
 | Branch | Content | Receives PRs from |
 |---|---|---|
-| `Developing` | Active development, blink firmware lives here | `Feature/*`, `Fix/*`, `Docs/*`, `Chore/*`, and `GeneratingTheProject` |
-| `Testing` | Code under hardware and integration testing | `Developing` only |
-| `Validating` | Verified code ready for hand-over to the team | `Testing` only |
+| `Developing` | Active development | `Feature/*`, `Fix/*`, `Docs/*`, `Chore/*` (lowercase prefixes also accepted) |
+| `Maintaining` | Code under hardware and integration testing | `Developing` only |
+| `Validating` | Verified code ready for hand-over to the team | `Maintaining` only |
+| `main` | Released code, the default branch | `Validating` only |
 
-Code moves in one direction: feature branch, then `Developing`, then `Testing`, then `Validating`. The `flow` CI check rejects any pull request that skips a stage.
+Code moves in one direction: work branch, then `Developing`, then `Maintaining`, then `Validating`, then `main`. The `flow` CI check rejects any pull request that skips a stage, and any push to a branch outside `Developing`, `Maintaining`, and `Validating`.
 
 ## Development workflow
 
@@ -63,20 +62,20 @@ Code moves in one direction: feature branch, then `Developing`, then `Testing`, 
 3. Commit with Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`).
 4. Run `clang-format -i` on changed files and build locally before pushing.
 5. Open a pull request into `Developing`. CI must be green and one reviewer must approve.
-6. When a feature set is ready for hardware testing, open a pull request from `Developing` into `Testing`, then from `Testing` into `Validating` after it passes. Use merge commits for these promotions so the branches stay in step.
+6. When a feature set is ready for hardware testing, open a pull request from `Developing` into `Maintaining`, then from `Maintaining` into `Validating` after it passes, then from `Validating` into `main`. Use merge commits for these promotions so the branches stay in step.
 7. Move the Linear issue to Done after the merge into `Developing`, or after `Validating` if the issue requires validation.
 
-Nobody pushes directly to `Developing`, `Testing`, or `Validating`. Every change goes through a pull request with a green CI run and approval.
-
-Repository rules are applied by `scripts/setup-repo.sh`: the three branches are protected, direct and force pushes are blocked, pull requests need approval, the `format`, `build`, and `flow` checks must pass, and conversations must be resolved.
+Nobody pushes directly to `Developing`, `Maintaining`, or `Validating`. Every change goes through a pull request with a green CI run and approval. `Validating` and `main` additionally require approval from a code owner.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes and pull requests to `Developing`, `Testing`, and `Validating`:
+`.github/workflows/ci.yml` runs on pushes to `Developing`, `Maintaining`, and `Validating`, and on pull requests into those three branches and `main`:
 
-- `flow`: rejects pull requests that break the branch order.
-- `format`: clang-format check on all C sources.
-- `build`: CMake and Ninja build with `arm-none-eabi-gcc`, warnings as errors, then uploads the ELF, BIN, and map as the `sensing-firmware` artifact.
+- `flow`: rejects pull requests and pushes that break the branch order.
+- `format`: clang-format check on the C sources in `bsp/`, `drivers/`, `middleware/`, `platform/`, and `tests/`, excluding the vendor code in `drivers/CMSIS`, `drivers/STM32G4xx_HAL_Driver`, and `drivers/BSP`.
+- `build`: CMake and Ninja build with `arm-none-eabi-gcc`, then uploads the ELF, BIN, and map as the `sensing-firmware` artifact.
+
+`.github/workflows/auto-reviewers.yml` requests reviewers automatically on pull requests.
 
 ## Repository layout
 
@@ -101,6 +100,7 @@ Repository rules are applied by `scripts/setup-repo.sh`: the three branches are 
 | Folder | Content | Purpose |
 |---|---|---|
 | `Core/` | `Inc/`, `Src/` | STM32CubeMX initialization, interrupt handlers, and the application entry point in `Core/Src/main.c` |
+| `bsp/` | `board.c`, `board.h` | Board support |
 | `drivers/` | `BSP/`, `CMSIS/`, `STM32G4xx_HAL_Driver/`, `.gitkeep` | ST vendor code copied in by STM32CubeMX; sensor drivers are added here one per sensor |
 | `middleware/` | `.gitkeep` | Reserved for CAN protocol definitions, RTOS wrappers, sensor fusion and filtering |
 | `platform/` | `startup.c`, `STM32G431RBTx_FLASH.ld` | Bare-metal startup code and linker script for the STM32G431RB |
@@ -109,7 +109,7 @@ Repository rules are applied by `scripts/setup-repo.sh`: the three branches are 
 | `scripts/` | `flash.sh`, `setup-repo.sh` | `flash.sh` programs the board, `setup-repo.sh` applies the branch protection rules |
 | `cmake/` | `arm-none-eabi.cmake`, `gcc-arm-none-eabi.cmake`, `starm-clang.cmake`, `stm32cubemx/` | Toolchain files for Arm GNU and ST Clang, plus CubeMX-generated CMake sources |
 | `EWARM/` | `EmbeddedSensingNode.ewd`, `.ewp`, `Project.eww`, `startup_stm32g431xx.s`, `stm32g431xx_flash.icf`, `stm32g431xx_sram.icf` | IAR Embedded Workbench project generated by CubeMX |
-| `.github/` | `CODEOWNERS`, `pull_request_template.md`, `workflows/` | Code owners, pull request template, and the CI workflow |
+| `.github/` | `CODEOWNERS`, `pull_request_template.md`, `workflows/ci.yml`, `workflows/auto-reviewers.yml` | Code owners, pull request template, CI and reviewer automation |
 
 Files under `drivers/BSP`, `drivers/CMSIS`, `drivers/STM32G4xx_HAL_Driver`, `cmake/stm32cubemx`, and `EWARM` are produced by STM32CubeMX. Change the `.ioc` and regenerate instead of editing them by hand.
 
