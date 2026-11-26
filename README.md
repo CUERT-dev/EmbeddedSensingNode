@@ -50,10 +50,10 @@ The build produces `build/sensing.elf`, `build/sensing.bin`, and `build/sensing.
 |---|---|---|
 | `Developing` | Active development | `Feature/*`, `Fix/*`, `Docs/*`, `Chore/*` (lowercase prefixes also accepted) |
 | `Maintaining` | Code under hardware and integration testing | `Developing` only |
-| `Validating` | Verified code ready for hand-over to the team | `Maintaining` only |
+| `Validating` | Verified code ready for hand-over to the team | `Maintaining`, plus `chore/sync-validating` for sync PRs |
 | `main` | Released code, the default branch | `Validating` only |
 
-Code moves in one direction: work branch, then `Developing`, then `Maintaining`, then `Validating`, then `main`. The `flow` CI check rejects any pull request that skips a stage, and any push to a branch outside `Developing`, `Maintaining`, and `Validating`.
+Code moves in one direction: work branch, then `Developing`, then `Maintaining`, then `Validating`, then `main`. The `flow` CI check rejects any pull request that skips a stage, except for the dedicated `chore/sync-validating` sync PR into `Validating`; it also rejects pushes to a branch outside `Developing`, `Maintaining`, and `Validating`.
 
 ## Development workflow
 

@@ -36,7 +36,7 @@ jobs:
           case "$base" in
             Developing) [[ "$head" == Feature/* || "$head" == Fix/* || "$head" == Docs/* || "$head" == Chore/* || "$head" == feature/* || "$head" == fix/* || "$head" == docs/* || "$head" == chore/* || "$head" == "GeneratingTheProject" ]] ;;
             Maintaining) [[ "$head" == "Developing" ]] ;;
-            Validating) [[ "$head" == "Maintaining" ]] ;;
+            Validating) [[ "$head" == "Maintaining" || "$head" == "chore/sync-validating" ]] ;;
             main) [[ "$head" == "Validating" ]] ;;
             *) false ;;
           esac || { echo "PR from $head into $base breaks the branch flow"; exit 1; }
