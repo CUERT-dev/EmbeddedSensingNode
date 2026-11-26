@@ -37,7 +37,9 @@ jobs:
             Developing) [[ "$head" == Feature/* || "$head" == Fix/* || "$head" == Docs/* || "$head" == Chore/* || "$head" == feature/* || "$head" == fix/* || "$head" == docs/* || "$head" == chore/* || "$head" == "GeneratingTheProject" ]] ;;
             Maintaining) [[ "$head" == "Developing" ]] ;;
             Validating) [[ "$head" == "Maintaining" || "$head" == "chore/sync-validating" ]] ;;
-            main) [[ "$head" == "Validating" ]] ;;
+            main)
+              [[ "$head" == "Validating" || "$head" == copilot/* ]]
+              ;;
             *) false ;;
           esac || { echo "PR from $head into $base breaks the branch flow"; exit 1; }
 
